@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FAB Clinic – AI Receptionist (POC)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --teal-deep:#2E4F4E; --teal-ink:#1E3534; --mint:#D6E8E5; --mint-soft:#EAF3F1;
+  --brand-blue:#2B7A8F; --plum:#602365; --plum-soft:#F1E6F2;
+  --paper:#F7FAF9; --surface:#FFFFFF; --ink:#1E2E2D; --muted:#5A6B69; --line:#D3E0DD;
+  --bubble-bot:#EAF3F1; --bubble-me:#2E4F4E; --bubble-me-ink:#FFFFFF;
+  --danger:#B3261E; --ok:#1F7A55;
+  --serif:"Marcellus", "Cormorant Garamond", Georgia, serif;
+  --sans:"Nunito Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#142120; --surface:#1B2B2A; --ink:#E6F0EE; --muted:#9FB3B0; --line:#2E4443;
+    --mint-soft:#203332; --bubble-bot:#243A39; --plum-soft:#2E2030; --brand-blue:#6FB8CB; --plum:#C58BCB;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#142120; --surface:#1B2B2A; --ink:#E6F0EE; --muted:#9FB3B0; --line:#2E4443;
+  --mint-soft:#203332; --bubble-bot:#243A39; --plum-soft:#2E2030; --brand-blue:#6FB8CB; --plum:#C58BCB;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55}
+img{max-width:100%}
+a{color:var(--brand-blue)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--plum);outline-offset:2px}
+
+/* ---------- Site header (mirrors fab-clinic.co.uk) ---------- */
+.topbar{background:var(--teal-ink);color:#DCEBE8;font-size:.85rem}
+.topbar .wrap{display:flex;justify-content:space-between;gap:1rem;padding:.4rem 1.25rem;flex-wrap:wrap}
+.topbar a{color:#fff;font-weight:700;text-decoration:none}
+header.site{background:var(--teal-deep)}
+header.site .wrap{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.6rem 1.25rem;flex-wrap:wrap}
+.logo img{height:64px;width:auto;display:block}
+nav.main{display:flex;gap:1.4rem;flex-wrap:wrap}
+nav.main a{color:#E6F2F0;text-decoration:none;font-size:.95rem}
+nav.main a:hover{color:#fff;text-decoration:underline}
+.wrap{max-width:1180px;margin:0 auto}
+
+/* ---------- Hero ---------- */
+.hero{background:var(--teal-deep);padding-bottom:2.5rem}
+.hero .wrap{padding:3rem 1.25rem 0;display:grid;grid-template-columns:1.1fr .9fr;gap:2.5rem;align-items:start}
+.hero h1{font-family:var(--serif);font-weight:400;color:#fff;font-size:clamp(2rem,4vw,3.1rem);line-height:1.12;margin:0 0 1rem}
+.hero p.lede{color:#D6E8E5;max-width:52ch;margin:0 0 1.5rem;font-size:1.08rem}
+.ticks{list-style:none;padding:0;margin:0 0 2rem;color:#fff}
+.ticks li{padding-left:1.6rem;position:relative;margin:.35rem 0}
+.ticks li::before{content:"";position:absolute;left:0;top:.45rem;width:.85rem;height:.5rem;border-left:2px solid var(--mint);border-bottom:2px solid var(--mint);transform:rotate(-45deg)}
+.poc-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:1.5rem;box-shadow:0 18px 40px -24px rgba(30,53,52,.55)}
+.poc-card h2{font-family:var(--serif);font-weight:400;margin:0 0 .5rem;font-size:1.45rem;color:var(--teal-deep)}
+:root[data-theme="dark"] .poc-card h2{color:var(--mint)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .poc-card h2{color:var(--mint)}}
+.poc-card p{margin:.25rem 0 1rem;color:var(--muted)}
+.try{display:flex;flex-wrap:wrap;gap:.5rem}
+.try button{border:1px solid var(--line);background:var(--mint-soft);border-radius:999px;padding:.45rem .9rem;cursor:pointer;font-size:.9rem}
+.try button:hover{border-color:var(--brand-blue)}
+.cta-row{display:flex;gap:.75rem;flex-wrap:wrap}
+.btn{border:0;border-radius:999px;padding:.75rem 1.3rem;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:.5rem}
+.btn-plum{background:var(--plum);color:#fff}
+:root[data-theme="dark"] .btn-plum{background:#7A2F80}
+.btn-ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5)}
+
+/* ---------- Content sections ---------- */
+section.block{padding:3.5rem 1.25rem 0}
+section.block h2{font-family:var(--serif);font-weight:400;font-size:1.9rem;margin:0 0 .4rem}
+section.block > .wrap > p{color:var(--muted);max-width:65ch;margin:0 0 1.5rem}
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;counter-reset:f}
+.flow div{border-top:3px solid var(--brand-blue);padding:1rem .25rem 0}
+.flow div:nth-child(4){border-color:var(--plum)}
+.flow b{display:block;margin-bottom:.25rem}
+.flow span{color:var(--muted);font-size:.93rem}
+
+.inbox{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.inbox-head{display:flex;justify-content:space-between;align-items:center;padding:.9rem 1.1rem;border-bottom:1px solid var(--line);gap:1rem;flex-wrap:wrap}
+.inbox-head b{font-size:1rem}
+.inbox-head button{background:none;border:1px solid var(--line);border-radius:8px;padding:.35rem .7rem;cursor:pointer;font-size:.85rem;color:var(--muted)}
+.table-scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:.92rem}
+th,td{text-align:left;padding:.65rem 1.1rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:.82rem;background:var(--mint-soft)}
+.pill{display:inline-block;padding:.1rem .55rem;border-radius:999px;font-size:.78rem;font-weight:700;background:var(--plum-soft);color:var(--plum)}
+.empty{padding:2rem 1.1rem;color:var(--muted)}
+footer{margin-top:4rem;background:var(--teal-ink);color:#CFE2DF;font-size:.9rem}
+footer .wrap{padding:2rem 1.25rem;display:flex;justify-content:space-between;gap:1.5rem;flex-wrap:wrap}
+footer a{color:#fff}
+
+/* ---------- Chat widget ---------- */
+.launcher{position:fixed;right:1.25rem;bottom:calc(1.25rem + env(safe-area-inset-bottom,0px));z-index:50;background:var(--plum);color:#fff;border:0;border-radius:999px;padding:.85rem 1.2rem .85rem 1rem;font-weight:700;display:flex;align-items:center;gap:.6rem;cursor:pointer;box-shadow:0 12px 30px -10px rgba(96,35,101,.7)}
+.launcher svg{width:22px;height:22px}
+.chat{position:fixed;right:1.25rem;bottom:calc(1.25rem + env(safe-area-inset-bottom,0px));z-index:60;width:min(410px,calc(100vw - 2.5rem));height:min(680px,calc(100% - 2.5rem));background:var(--surface);border-radius:20px;box-shadow:0 30px 70px -20px rgba(20,40,39,.55);display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--line);transform-origin:bottom right;transition:transform .22s ease,opacity .22s ease}
+.chat[hidden]{display:flex;transform:scale(.92);opacity:0;pointer-events:none;visibility:hidden;transition:transform .22s ease,opacity .22s ease,visibility 0s .22s}
+.launcher[hidden]{display:none}
+.chat-head{background:var(--teal-deep);color:#fff;padding:.75rem .9rem;display:flex;align-items:center;gap:.7rem}
+.chat-head img{height:42px;width:auto;border-radius:8px}
+.chat-head .who{flex:1;min-width:0}
+.chat-head .who b{display:block;font-family:var(--serif);font-weight:400;font-size:1.08rem;letter-spacing:.01em}
+.chat-head .who small{display:flex;align-items:center;gap:.35rem;color:#CFE5E1;font-size:.78rem}
+.dot{width:8px;height:8px;border-radius:50%;background:#7EE2B8;display:inline-block}
+.chat-head button{background:rgba(255,255,255,.12);border:0;color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:1.1rem;line-height:1}
+.notice{background:var(--plum-soft);color:var(--ink);font-size:.78rem;padding:.45rem .9rem;border-bottom:1px solid var(--line)}
+.msgs{flex:1;overflow-y:auto;padding:1rem .9rem;display:flex;flex-direction:column;gap:.65rem;background:var(--paper)}
+.msg{max-width:88%;padding:.6rem .85rem;border-radius:16px;font-size:.93rem;line-height:1.5;word-wrap:break-word}
+.msg.bot{background:var(--bubble-bot);border-bottom-left-radius:5px;align-self:flex-start}
+.msg.me{background:var(--bubble-me);color:var(--bubble-me-ink);border-bottom-right-radius:5px;align-self:flex-end}
+.msg p{margin:0 0 .45rem}.msg p:last-child{margin:0}
+.msg ul{margin:.2rem 0 .45rem;padding-left:1.1rem}
+.msg li{margin:.1rem 0}
+.typing{display:inline-flex;gap:4px;padding:.2rem 0}
+.typing i{width:7px;height:7px;border-radius:50%;background:var(--muted);opacity:.5;animation:b 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px);opacity:1}}
+.chips{display:flex;gap:.4rem;flex-wrap:wrap;padding:.55rem .9rem;border-top:1px solid var(--line);background:var(--surface)}
+.chips button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:.32rem .75rem;font-size:.82rem;cursor:pointer;color:var(--ink)}
+.chips button:hover{border-color:var(--brand-blue);background:var(--mint-soft)}
+.chips button.primary{background:var(--plum);border-color:var(--plum);color:#fff}
+.composer{display:flex;gap:.5rem;padding:.65rem .75rem;border-top:1px solid var(--line);background:var(--surface)}
+.composer input{flex:1;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:.6rem .95rem;min-width:0}
+.composer button{background:var(--teal-deep);color:#fff;border:0;border-radius:50%;width:42px;height:42px;cursor:pointer;display:grid;place-items:center;flex:none}
+:root[data-theme="dark"] .composer button{background:var(--brand-blue)}
+.composer button:disabled{opacity:.5;cursor:default}
+.powered{font-size:.7rem;color:var(--muted);text-align:center;padding:0 0 .45rem;background:var(--surface)}
+
+/* booking form inside chat */
+.bform{align-self:stretch;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:1rem;font-size:.9rem}
+.bform h3{font-family:var(--serif);font-weight:400;margin:0 0 .15rem;font-size:1.15rem}
+.bform .sub{color:var(--muted);font-size:.8rem;margin:0 0 .8rem}
+.step{display:flex;gap:.3rem;margin-bottom:.9rem}
+.step span{flex:1;height:4px;border-radius:4px;background:var(--line)}
+.step span.on{background:var(--brand-blue)}
+.field{margin-bottom:.75rem}
+.field label,.field .lbl{display:block;font-weight:600;font-size:.82rem;margin-bottom:.3rem}
+.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:.55rem .7rem}
+.field textarea{min-height:64px;resize:vertical}
+.seg{display:flex;flex-wrap:wrap;gap:.4rem}
+.seg button{flex:1 1 auto;border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:.5rem .55rem;cursor:pointer;font-size:.85rem;text-align:center;min-width:88px}
+.seg button small{display:block;color:var(--muted);font-size:.72rem}
+.seg button[aria-pressed="true"]{border-color:var(--teal-deep);background:var(--mint);color:var(--teal-ink);font-weight:700}
+.seg button[aria-pressed="true"] small{color:var(--teal-deep)}
+.price-tag{display:flex;justify-content:space-between;background:var(--mint-soft);border-radius:10px;padding:.5rem .7rem;font-size:.85rem;margin-top:.4rem}
+.err{color:var(--danger);font-size:.78rem;margin-top:.25rem;display:none}
+.field.bad .err{display:block}
+.field.bad input,.field.bad select,.field.bad .seg{border-color:var(--danger)}
+.check{display:flex;gap:.5rem;align-items:flex-start;font-size:.8rem;color:var(--muted)}
+.check input{margin-top:.2rem;accent-color:var(--plum)}
+.form-nav{display:flex;justify-content:space-between;gap:.5rem;margin-top:.9rem}
+.form-nav button{border-radius:999px;padding:.55rem 1.1rem;font-weight:700;cursor:pointer;border:1px solid var(--line);background:var(--surface)}
+.form-nav button.go{background:var(--plum);border-color:var(--plum);color:#fff}
+.hint{background:var(--plum-soft);border-radius:10px;padding:.5rem .7rem;font-size:.8rem;margin-top:.4rem}
+.confirm{align-self:stretch;border:1px solid var(--line);border-left:4px solid var(--ok);background:var(--surface);border-radius:14px;padding:.9rem 1rem;font-size:.88rem}
+.confirm h3{margin:0 0 .3rem;font-size:1rem}
+.confirm dl{display:grid;grid-template-columns:auto 1fr;gap:.2rem .8rem;margin:.5rem 0 .8rem}
+.confirm dt{color:var(--muted)}.confirm dd{margin:0;font-weight:600}
+.confirm .acts{display:flex;gap:.5rem;flex-wrap:wrap}
+.confirm .acts a{text-decoration:none;font-weight:700;font-size:.82rem;border-radius:999px;padding:.45rem .85rem;border:1px solid var(--line);color:var(--ink)}
+.confirm .acts a.wa{background:#1F7A55;border-color:#1F7A55;color:#fff}
+
+@media (max-width:900px){
+  .hero .wrap{grid-template-columns:1fr}
+  .hero{background:var(--teal-deep)}
+  .poc-card{margin-bottom:2rem}
+  .flow{grid-template-columns:1fr 1fr}
+  nav.main{display:none}
+}
+@media (max-width:560px){
+  .chat{right:0;bottom:0;width:100vw;height:100%;border-radius:0;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .flow{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="wrap">
+  <span>Require a home visit? Call us at <a href="tel:02039042888">0203 904 2888</a></span>
+  <span>65 Greenford Avenue, Hanwell, London W7 1LL</span>
+</div></div>
+
+<header class="site"><div class="wrap">
+  <a class="logo" href="https://fab-clinic.co.uk/" aria-label="FAB Clinic home"><img src="data:image/png;base64,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" alt="FAB Clinic – Cosmetic & Medical, Authentic in Nature"></a>
+  <nav class="main" aria-label="Main">
+    <a href="https://fab-clinic.co.uk/specialist-physio-clinic-hanwell/">Physiotherapy (MSK)</a>
+    <a href="https://fab-clinic.co.uk/ultrasound-diagnostics-msk-ultrasound-scans/">Advanced MSK Diagnostics</a>
+    <a href="https://fab-clinic.co.uk/services">Services</a>
+    <a href="https://fab-clinic.co.uk/prices">Prices</a>
+    <a href="https://fab-clinic.co.uk/faq">FAQ</a>
+  </nav>
+</div></header>
+
+<section class="hero"><div class="wrap">
+  <div>
+    <h1>Advanced MSK diagnostic services &amp; physiotherapy clinic in West London</h1>
+    <p class="lede">Now with an AI receptionist that answers patient questions, explains treatments and prices, and takes appointment requests at any hour, including evenings and weekends when reception is closed.</p>
+    <ul class="ticks">
+      <li>Evidence-based approaches to treatment only</li>
+      <li>Private &amp; privately-insured patients welcome</li>
+      <li>Senior HCPC-approved physiotherapists, osteopaths and sonographers</li>
+    </ul>
+    <div class="cta-row" style="margin-bottom:2.5rem">
+      <button class="btn btn-plum" data-open-booking>Book an appointment</button>
+      <button class="btn btn-ghost" data-open-chat>Ask the receptionist</button>
+    </div>
+  </div>
+  <div class="poc-card">
+    <h2>Try the AI receptionist</h2>
+    <p>Tap a question to see how it handles real enquiries. Answers use only the clinic's published services, prices and FAQs.</p>
+    <div class="try">
+      <button data-ask="How much is a physiotherapy initial assessment?">Physio assessment price</button>
+      <button data-ask="Do you accept Bupa insurance?">Bupa insurance</button>
+      <button data-ask="What is shockwave therapy and how many sessions will I need?">Shockwave sessions</button>
+      <button data-ask="I have knee pain from running, what treatment would suit me?">Running knee pain</button>
+      <button data-ask="Can I get an ultrasound-guided steroid injection for my shoulder?">Shoulder injection</button>
+      <button data-ask="Do you do home visits in Ealing?">Home visits in Ealing</button>
+    </div>
+  </div>
+</div></section>
+
+<section class="block"><div class="wrap">
+  <h2>How an out-of-hours booking works</h2>
+  <p>The receptionist never confirms a slot on its own. It captures a complete, structured request so the team can confirm it with one call or message when reception reopens.</p>
+  <div class="flow">
+    <div><b>Patient asks</b><span>Prices, treatments, insurance, location, what to expect at a first session.</span></div>
+    <div><b>AI answers from site content</b><span>Grounded in the FAB Clinic price list and FAQ. Anything clinical is referred to a physiotherapist.</span></div>
+    <div><b>Booking form in chat</b><span>Treatment, visit type, preferred day and time, payment or insurer, contact details.</span></div>
+    <div><b>Request reaches reception</b><span>Logged for staff and sent via WhatsApp or email with a reference number.</span></div>
+  </div>
+</div></section>
+
+<section class="block" id="inbox"><div class="wrap">
+  <h2>Reception view</h2>
+  <p>Requests captured by the assistant in this browser appear here, the way staff would see them in the morning. (Demo storage only; in production these would go to the clinic's booking system.)</p>
+  <div class="inbox">
+    <div class="inbox-head"><b id="inboxCount">0 requests waiting</b><button id="clearInbox" type="button">Clear demo requests</button></div>
+    <div class="table-scroll" id="inboxBody"></div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <div><b>FAB Clinic</b><br>65 Greenford Avenue, Hanwell, London, W7 1LL<br><a href="tel:02039042888">0203 904 2888</a> · <a href="mailto:info@fab-clinic.co.uk">info@fab-clinic.co.uk</a></div>
+  <div>Proof of concept prepared for FAB Clinic.<br>Content sourced from fab-clinic.co.uk.</div>
+</div></footer>
+
+<!-- Launcher -->
+<button class="launcher" id="launcher" aria-controls="chat" aria-expanded="false">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>
+  Questions? Ask us
+</button>
+
+<!-- Chat -->
+<section class="chat" id="chat" hidden aria-label="FAB Clinic receptionist chat">
+  <div class="chat-head">
+    <img src="data:image/png;base64,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" alt="">
+    <div class="who"><b>FAB Clinic Reception</b><small><span class="dot"></span><span id="modeLabel">AI assistant · replies instantly</span></small></div>
+    <button id="restart" title="Start over" aria-label="Start a new conversation">↺</button>
+    <button id="closeChat" aria-label="Close chat">×</button>
+  </div>
+  <div class="notice">For emergencies call 999. For urgent medical advice call NHS 111. This assistant can't diagnose conditions.</div>
+  <div class="msgs" id="msgs" aria-live="polite"></div>
+  <div class="chips" id="chips"></div>
+  <form class="composer" id="composer" autocomplete="off">
+    <input id="q" placeholder="Type your question…" aria-label="Your message" maxlength="500">
+    <button id="send" aria-label="Send"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg></button>
+  </form>
+  <div class="powered">AI receptionist · requests are confirmed by FAB Clinic staff</div>
+</section>
+
+<script>
+/* ================= Clinic data (from fab-clinic.co.uk) ================= */
+const CLINIC = {
+  phone:"0203 904 2888", tel:"02039042888", wa:"442039042888", email:"info@fab-clinic.co.uk",
+  address:"FAB Clinic, 65 Greenford Avenue, Hanwell, London, W7 1LL"
+};
+const TREATMENTS = [
+  {g:"Physiotherapy", id:"physio-ia30", name:"Physiotherapy Initial Assessment", dur:"30 min", price:"£69"},
+  {g:"Physiotherapy", id:"physio-ia60", name:"Physiotherapy Initial Assessment & Treatment", dur:"60 min", price:"£120"},
+  {g:"Physiotherapy", id:"physio-spec", name:"Physiotherapy Assessment (Clinical Specialist)", dur:"30 min", price:"£85"},
+  {g:"Physiotherapy", id:"physio-us", name:"Physio Assessment with Ultrasound Diagnostics", dur:"30 min", price:"£150"},
+  {g:"Shockwave Therapy (ESWT)", id:"eswt", name:"Shockwave Therapy – single session", dur:"10–15 min treatment", price:"£130"},
+  {g:"Acupuncture & Massage", id:"acu", name:"Acupuncture (includes assessment)", dur:"45 min", price:"from £45"},
+  {g:"Acupuncture & Massage", id:"mass30", name:"Massage – deep tissue, full body or sports", dur:"30 min", price:"£60"},
+  {g:"Acupuncture & Massage", id:"mass60", name:"Massage – deep tissue, full body or sports", dur:"60 min", price:"£110"},
+  {g:"Joint Injections", id:"inj-ster", name:"Ultrasound-Guided Joint Injection (steroid)", dur:"", price:"£300"},
+  {g:"Joint Injections", id:"inj-ha", name:"Hyaluronic Acid Injection (Ostenil Plus)", dur:"", price:"£300"},
+  {g:"Hyperhidrosis & Sclerotherapy", id:"hyper", name:"Hyperhidrosis (excessive sweating treatment)", dur:"45 min", price:"£399"},
+  {g:"Hyperhidrosis & Sclerotherapy", id:"sclero", name:"Sclerotherapy (visible veins)", dur:"45 min", price:"£299"},
+  {g:"Not sure", id:"unsure", name:"Not sure – I'd like advice on the right appointment", dur:"", price:"Discussed with the team"}
+];
+const INSURERS = ["Aviva","AXA PPP / AXA Health","BUPA","Vitality Health","Simply Health","Allianz","WPA","Healix","Cigna","Other"];
+
+const KB = `
+FAB CLINIC – facts from fab-clinic.co.uk (the ONLY source you may use)
+Who: Specialist MSK (musculoskeletal) physio clinic in Hanwell, West London (W7). One-stop pain management clinic combining ultrasound imaging, ultrasound-guided injections and physiotherapy. Expertly trained physiotherapists, osteopaths and sonographers; senior HCPC-approved physiotherapists. Evidence-based treatment only. Private and privately-insured patients welcome. Rated 4.8/5 from 100+ Google reviews.
+Address: 65 Greenford Avenue, Hanwell, London, W7 1LL. Phone 0203 904 2888. WhatsApp +44 20 3904 2888. Email info@fab-clinic.co.uk.
+Areas covered (west London): Ealing Broadway, West Ealing, Chiswick, Greenford, Perivale, Hanger Lane, Pitshanger, Southall, Hounslow, Northolt, Northfields. Home visits available – call 0203 904 2888.
+Other services listed: examination and treatment, tests and referrals, sick notes; easy booking, extended opening hours, in-person or video consultations.
+
+PRICES (prices are tailored; list not exhaustive; for other treatments contact the clinic):
+- Physiotherapy Initial Assessment (30 min) £69
+- Physiotherapy Initial Assessment & Treatment (60 min) £120
+- Physiotherapy Assessment, Clinical Specialist (30 min) £85
+- Physio Assessment with Ultrasound Diagnostics (30 min) £150
+- Acupuncture incl. assessment (45 min): shown as £45 in the Acupuncture section and £60 in the Physiotherapy section – say "from £45, the team will confirm"
+- Multi-session physio packages available at discount rates – speak with staff
+- Shockwave Therapy (ESWT) single session £130; multiple sessions usually recommended on assessment
+- Massage 30 min (deep tissue, full body, sports) £60; Massage 60 min £110
+- Ultrasound-guided joint injection (steroid) £300; Hyaluronic acid injection (Ostenil Plus) £300
+- Hyperhidrosis (excessive sweating) treatment 45 min £399; Sclerotherapy (visible veins) 45 min £299
+
+TREATMENTS
+Physiotherapy: manual therapy, manipulation, myofascial release, acupuncture, dry needling, trigger points, joint mobilisation, neural mobilisation, exercise rehabilitation, aquatic therapy/hydrotherapy, stretching, cross-friction massage, women's health, taping and strapping, ultrasound treatment, Pilates, home visits. For chronic or acute conditions, e.g. lower back pain, frozen shoulder, sports injuries.
+First session: thorough assessment incl. medical history and physical examination, then a personalised treatment plan. Frequency depends on condition – from a few times a week to once a month. Mild temporary soreness after sessions can happen.
+Conditions treated include: mechanical low back pain, slipped disc/sciatica, facet joint dysfunction, cervical spondylosis, whiplash, rotator cuff tendinopathy, frozen shoulder, shoulder impingement, tennis elbow, golfer's elbow, carpal tunnel, De Quervain's, hip osteoarthritis, trochanteric bursitis, knee osteoarthritis, meniscal tear, ACL injury, patellofemoral pain (pain around kneecap, worse on stairs/squatting/running), plantar fasciitis, Achilles tendinopathy.
+Ultrasound-guided diagnostics: fast, accurate insight into MSK/soft tissue conditions; identifies inflammation, tears, structural abnormalities; instant imaging feedback; good for sports injury assessment.
+Shockwave (ESWT): non-invasive, high-energy sound waves stimulate healing; for chronic conditions not responding to rest/medication/physio. Treats plantar fasciitis, Achilles tendinopathy, tennis/golfer's elbow, patellar tendinitis, shin splints, rotator cuff/shoulder tendinitis, calcific tendinopathy, hip bursitis/gluteal tendinopathy, trigger points, hamstring tendinopathy, frozen shoulder, chronic neck/back muscle pain, RSI. Sessions 10–15 min; usually 3–6 sessions; many feel improvement after 1–2. Mild discomfort adjusted to comfort. Aftercare: redness/soreness 24–48h normal, avoid intense exercise on area for 48h, ice if needed, stay hydrated. NOT recommended for: pregnancy, blood-clotting disorders, tumours or infection at site, pacemakers, some blood thinners.
+Ultrasound-guided joint (steroid/cortisone) injection: reduces pain and inflammation; ideal for shoulder impingement, bursitis, tennis elbow, arthritis, plantar fasciitis; fast pain relief, improves joint function.
+PRP (platelet-rich plasma) injections are described in the FAQ: patient's own platelets injected under ultrasound guidance; for osteoarthritis, tendonitis, ligament and cartilage damage; results typically within weeks, significant by ~6 weeks; process under an hour. (No PRP price is published – the team will advise.)
+
+INSURANCE: accepted insurers per FAQ: Aviva, AXA PPP, BUPA, Vitality Health, Simply Health, Allianz, WPA, Healix. Website logos also show Cigna. Patients should check cover/referral requirements with their insurer.
+OPENING HOURS: not published on the website – do not state specific hours. Say the team confirms all requests by phone or email.
+`;
+
+const SYS = `You are the virtual receptionist for FAB Clinic, Hanwell, West London, chatting on the clinic website – often outside reception hours.
+Rules:
+- Use ONLY the facts below. If something isn't covered, say you don't have that detail and offer the booking form or the clinic contacts (0203 904 2888, WhatsApp, info@fab-clinic.co.uk). Never invent hours, names, prices or availability.
+- You are not a clinician. Never diagnose. For symptoms, explain which FAB Clinic services commonly help that kind of problem and suggest an assessment. For red flags (chest pain, sudden weakness/numbness, loss of bladder/bowel control, severe trauma, signs of infection, feeling very unwell) tell them to call 999 or NHS 111 right away.
+- You cannot confirm a time slot. When the patient wants to book, or asks about availability, call the open_booking_form tool (pick the closest treatment id, or "unsure") and say the form is below and the team will confirm their slot.
+- Be warm, concise and British English. 2–5 short sentences, or a short "- " bullet list for prices. Use **bold** for prices. No headings. No emojis.
+- Gently offer booking at the end when it fits naturally, but don't repeat the offer every message.
+
+${KB}`;
+
+/* ================= Helpers ================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function md(t){
+  const lines = esc(t.trim()).split(/\n+/); let html="", inList=false;
+  for(const l of lines){
+    const b = l.match(/^\s*[-•*]\s+(.*)/);
+    if(b){ if(!inList){html+="<ul>";inList=true;} html+="<li>"+inline(b[1])+"</li>"; }
+    else { if(inList){html+="</ul>";inList=false;} html+="<p>"+inline(l)+"</p>"; }
+  }
+  if(inList) html+="</ul>"; return html;
+}
+function inline(s){
+  return s.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
+          .replace(/(0203 904 2888)/g,'<a href="tel:02039042888">$1</a>')
+          .replace(/(info@fab-clinic\.co\.uk)/g,'<a href="mailto:$1">$1</a>');
+}
+const store = {
+  get(){ try{ return JSON.parse(localStorage.getItem("fab-requests")||"[]"); }catch(e){ return []; } },
+  set(v){ try{ localStorage.setItem("fab-requests", JSON.stringify(v)); }catch(e){} }
+};
+
+/* ================= Chat state ================= */
+const msgsEl = $("#msgs"), chipsEl = $("#chips"), chat = $("#chat"), launcher = $("#launcher");
+let history = [];        // [{role, content}] sent to Claude
+let busy = false, sample = null, aiAvailable = null, pendingForm = null;
+
+function scrollDown(){ msgsEl.scrollTop = msgsEl.scrollHeight; }
+function addMsg(role, html){
+  const d = document.createElement("div"); d.className = "msg " + (role==="user"?"me":"bot");
+  d.innerHTML = html; msgsEl.appendChild(d); scrollDown(); return d;
+}
+function setChips(list){
+  chipsEl.innerHTML = "";
+  list.forEach(c => {
+    const b = document.createElement("button"); b.type="button"; b.textContent = c.label;
+    if(c.primary) b.className="primary";
+    b.onclick = () => c.action ? c.action() : ask(c.label);
+    chipsEl.appendChild(b);
+  });
+}
+const DEFAULT_CHIPS = [
+  {label:"Book an appointment", primary:true, action:()=>{ addMsg("user", esc("I'd like to book an appointment")); showBookingForm(""); }},
+  {label:"Prices"}, {label:"Treatments you offer"}, {label:"Insurance accepted"}, {label:"Where are you?"}
+];
+
+function openChat(){ chat.hidden=false; launcher.hidden=true; launcher.setAttribute("aria-expanded","true"); setTimeout(()=>$("#q").focus({preventScroll:true}),50); }
+function closeChat(){ chat.hidden=true; launcher.hidden=false; launcher.setAttribute("aria-expanded","false"); launcher.focus(); }
+
+function welcome(){
+  msgsEl.innerHTML=""; history=[]; pendingForm=null;
+  addMsg("bot", md("Hello, welcome to **FAB Clinic** in Hanwell. I'm the clinic's virtual receptionist and I'm here around the clock.\n\nI can explain our treatments and prices, check whether we work with your insurer, and take an appointment request for the team to confirm. How can I help?"));
+  setChips(DEFAULT_CHIPS);
+}
+
+/* ================= AI (sample capability) with local fallback ================= */
+(async () => {
+  try{ if(window.claude && claude.use) sample = await claude.use("sample"); }catch(e){ sample = null; }
+  aiAvailable = !!sample;
+  if(!aiAvailable) $("#modeLabel").textContent = "Assistant · instant answers";
+})();
+
+async function ask(text){
+  text = text.trim(); if(!text || busy) return;
+  openChat();
+  addMsg("user", esc(text));
+  history.push({role:"user", content:text});
+  busy = true; $("#send").disabled = true;
+  const bubble = addMsg("bot", '<span class="typing" aria-label="Typing"><i></i><i></i><i></i></span>');
+  pendingForm = null;
+  let answer = "";
+  if(sample){
+    try{
+      const turns = history.slice(-12).map(m=>({...m}));
+      while(turns.length && turns[0].role!=="user") turns.shift();
+      turns[0] = {role:"user", content: SYS + "\n\n---\nPatient's message:\n" + turns[0].content};
+      const res = await sample(turns, {
+        modelTier:"quick", cache:false,
+        onText:({text}) => { bubble.innerHTML = md(text); scrollDown(); },
+        tools:[{
+          name:"open_booking_form",
+          description:"Show the appointment request form in the chat. Use when the patient wants to book, asks about availability, or agrees to book.",
+          inputSchema:{type:"object",properties:{treatment_id:{type:"string",enum:TREATMENTS.map(t=>t.id),description:"Closest treatment id, or 'unsure'"}}},
+          execute:(input)=>{ pendingForm = (input && input.treatment_id) || "unsure"; return {shown:true}; }
+        }]
+      });
+      answer = res.text || "";
+    }catch(e){
+      if(e && e.text){ answer = e.text; }
+      else { answer = localAnswer(text); if(e && e.code==="not_granted"){ sample=null; $("#modeLabel").textContent="Assistant · instant answers"; } }
+    }
+  } else {
+    await new Promise(r=>setTimeout(r,450));
+    answer = localAnswer(text);
+  }
+  if(!answer) answer = "Sorry, I didn't catch that. You can ask about our treatments, prices or insurance, or book an appointment request.";
+  bubble.innerHTML = md(answer);
+  history.push({role:"assistant", content:answer});
+  busy = false; $("#send").disabled = false; scrollDown();
+  if(pendingForm !== null){ showBookingForm(pendingForm); pendingForm = null; }
+}
+
+/* Keyword answers so the demo still works when AI isn't available */
+function localAnswer(q){
+  const s = q.toLowerCase();
+  const has = (...w) => w.some(x => s.includes(x));
+  if(has("chest pain","can't breathe","cannot breathe","numb","bladder","bowel","emergency","collapsed"))
+    return "That sounds like it needs urgent attention. Please call **999** now, or **NHS 111** for urgent medical advice. Our clinic isn't an emergency service.";
+  if(has("book","appointment","availability","available","slot","schedule")){
+    pendingForm = guessTreatment(s) || "unsure";
+    return "Of course. I've opened the appointment request form below. Choose your treatment and preferred time, and the team will confirm your slot by phone or email.";
+  }
+  if(has("bupa","aviva","axa","vitality","simply","allianz","wpa","healix","cigna","insur"))
+    return "Yes, we welcome privately-insured patients. We work with:\n- Aviva, AXA PPP, BUPA, Vitality Health, Simply Health\n- Allianz, WPA, Healix and Cigna\nPlease check your cover and whether your insurer needs a GP referral before your visit.";
+  if(has("shockwave","eswt"))
+    return "Shockwave therapy (ESWT) uses focused sound waves to stimulate healing in stubborn tendon and soft-tissue problems such as plantar fasciitis, tennis elbow and Achilles tendinopathy.\n- Sessions take **10–15 minutes**, usually **3–6 sessions**\n- Single session **£130**\nIt isn't suitable during pregnancy, with a pacemaker, or with some clotting conditions. Would you like to request an appointment?";
+  if(has("injection","steroid","cortisone","hyaluronic","ostenil","prp"))
+    return "We offer ultrasound-guided injections, so the medicine is placed precisely where it's needed:\n- Steroid joint injection **£300**\n- Hyaluronic acid (Ostenil Plus) **£300**\nThey're commonly used for shoulder impingement, bursitis, tennis elbow, arthritis and plantar fasciitis. A clinician will confirm suitability at your appointment.";
+  if(has("ultrasound","scan","diagnos","imaging"))
+    return "Our ultrasound diagnostics give fast, accurate insight into muscle, tendon and joint problems, picking up inflammation, tears and structural changes with instant feedback. A physio assessment with ultrasound diagnostics is **£150** (30 min).";
+  if(has("massage"))
+    return "We offer deep tissue, full body and sports massage:\n- 30 minutes **£60**\n- 60 minutes **£110**";
+  if(has("acupunct","dry need"))
+    return "Acupuncture includes an assessment and lasts 45 minutes, from **£45**. The team will confirm the exact price when they book you in.";
+  if(has("sweat","hyperhidrosis","vein","sclero"))
+    return "We also offer:\n- Hyperhidrosis (excessive sweating) treatment, 45 min, **£399**\n- Sclerotherapy for visible veins, 45 min, **£299**";
+  if(has("home visit","home-visit","visit me","at home"))
+    return "Yes, we offer home visits across west London, including Ealing Broadway, West Ealing, Chiswick, Greenford, Perivale, Southall, Hounslow and Northolt. For home visits please call the team on 0203 904 2888, or leave a request with me and choose \"Home visit\".";
+  if(has("price","cost","how much","fee","£","charge"))
+    return "Here are our main prices:\n- Physio initial assessment, 30 min **£69**\n- Assessment & treatment, 60 min **£120**\n- Clinical specialist assessment, 30 min **£85**\n- Assessment with ultrasound diagnostics **£150**\n- Shockwave session **£130**\n- Ultrasound-guided injection **£300**\nMulti-session physio packages are available at a discount.";
+  if(has("where","address","location","park","direction","find you","area"))
+    return "We're at **65 Greenford Avenue, Hanwell, London W7 1LL**, and we see patients from across west London, including Ealing, Chiswick, Greenford, Perivale, Southall, Hounslow and Northolt.";
+  if(has("open","hours","close","weekend","sunday","saturday","evening"))
+    return "The team will confirm exact appointment times with you. You can leave a request with me at any time, day or night, and reception will get back to you by phone or email.";
+  if(has("first session","first appointment","expect","what happens"))
+    return "Your first session starts with a thorough assessment, including your medical history and a physical examination. Your physiotherapist then builds a personalised treatment plan. Some people feel mild, temporary soreness afterwards, which is normal.";
+  if(has("back","neck","shoulder","knee","hip","elbow","ankle","foot","heel","sciatica","pain","injur","sport","arthritis","run"))
+    return "I'm sorry you're dealing with that. I can't diagnose, but our senior HCPC-approved physiotherapists treat this kind of problem every day, from back and neck pain to sports injuries, tendon problems and arthritis. The best start is a **Physiotherapy Initial Assessment (£69, 30 min)**, or **£150** with ultrasound diagnostics if you'd like imaging. Shall I open the booking form?";
+  if(has("treatment","service","offer","do you do","physio"))
+    return "We're a one-stop MSK pain clinic. Our main services are:\n- Physiotherapy (manual therapy, acupuncture, exercise rehab, Pilates, home visits)\n- Ultrasound diagnostic scans\n- Shockwave therapy (ESWT)\n- Ultrasound-guided joint injections\n- Massage, hyperhidrosis treatment and sclerotherapy";
+  if(has("hello","hi ","hey","good morning","good evening"))
+    return "Hello! How can I help today? I can explain treatments and prices, check insurance, or take an appointment request.";
+  if(has("thank"))
+    return "You're very welcome. Is there anything else I can help with?";
+  return "I don't have that detail to hand. The team can help on 0203 904 2888, on WhatsApp, or at info@fab-clinic.co.uk. I can also take an appointment request for them now.";
+}
+function guessTreatment(s){
+  if(s.includes("shockwave")||s.includes("eswt")) return "eswt";
+  if(s.includes("hyaluronic")||s.includes("ostenil")) return "inj-ha";
+  if(s.includes("injection")||s.includes("steroid")) return "inj-ster";
+  if(s.includes("ultrasound")||s.includes("scan")) return "physio-us";
+  if(s.includes("massage")) return "mass30";
+  if(s.includes("acupunct")) return "acu";
+  if(s.includes("physio")) return "physio-ia30";
+  return null;
+}
+
+/* ================= Booking form (inside chat) ================= */
+function nextDays(n){
+  const out=[]; const d=new Date(); d.setHours(0,0,0,0);
+  for(let i=1; out.length<n; i++){ const x=new Date(d); x.setDate(d.getDate()+i); out.push(x); }
+  return out;
+}
+function fmtDay(d){ return d.toLocaleDateString("en-GB",{weekday:"short", day:"numeric", month:"short"}); }
+
+function showBookingForm(treatmentId){
+  openChat();
+  const st = { step:1, treatment: treatmentId && treatmentId!=="unsure" ? treatmentId : (treatmentId==="unsure"?"unsure":""), visit:"clinic", date:"", time:"", pay:"self", insurer:"", policy:"", name:"", phone:"", email:"", notes:"", consent:false };
+  const box = document.createElement("div"); box.className="bform"; msgsEl.appendChild(box);
+  setChips([{label:"Cancel booking", action:()=>{ box.remove(); addMsg("bot", md("No problem, I've cancelled that. Anything else I can help with?")); setChips(DEFAULT_CHIPS); }}]);
+  const days = nextDays(10);
+
+  function render(){
+    const t = TREATMENTS.find(x=>x.id===st.treatment);
+    let body = "";
+    if(st.step===1){
+      const groups = [...new Set(TREATMENTS.map(x=>x.g))];
+      body = `
+      <div class="field" data-f="treatment"><label for="bf-t">Treatment</label>
+        <select id="bf-t"><option value="">Choose a treatment…</option>
+        ${groups.map(g=>`<optgroup label="${esc(g)}">${TREATMENTS.filter(x=>x.g===g).map(x=>`<option value="${x.id}" ${x.id===st.treatment?"selected":""}>${esc(x.name)}${x.dur?" ("+esc(x.dur)+")":""}</option>`).join("")}</optgroup>`).join("")}
+        </select>
+        ${t?`<div class="price-tag"><span>${esc(t.dur||"Duration confirmed by team")}</span><b>${esc(t.price)}</b></div>`:""}
+        <div class="err">Please choose a treatment, or pick "Not sure".</div></div>
+      <div class="field"><span class="lbl">Where</span>
+        <div class="seg" role="group" aria-label="Visit type">
+          <button type="button" data-visit="clinic" aria-pressed="${st.visit==="clinic"}">At the clinic<small>Hanwell W7 1LL</small></button>
+          <button type="button" data-visit="home" aria-pressed="${st.visit==="home"}">Home visit<small>West London</small></button>
+        </div>
+        ${st.visit==="home"?`<div class="hint">Home visits are arranged by phone. We'll pass your request on, or call <a href="tel:02039042888">0203 904 2888</a>.</div>`:""}
+      </div>`;
+    }
+    if(st.step===2){
+      body = `
+      <div class="field" data-f="date"><span class="lbl">Preferred day</span>
+        <div class="seg" role="group" aria-label="Preferred day">
+          ${days.map(d=>{const v=d.toISOString().slice(0,10);return `<button type="button" data-date="${v}" aria-pressed="${st.date===v}">${fmtDay(d)}</button>`;}).join("")}
+        </div><div class="err">Please choose a day.</div></div>
+      <div class="field" data-f="time"><span class="lbl">Preferred time</span>
+        <div class="seg" role="group" aria-label="Preferred time">
+          ${[["Morning","before 12pm"],["Afternoon","12pm – 5pm"],["Evening","after 5pm"],["Any time","most flexible"]].map(([a,b])=>`<button type="button" data-time="${a}" aria-pressed="${st.time===a}">${a}<small>${b}</small></button>`).join("")}
+        </div><div class="err">Please choose a time of day.</div></div>
+      <div class="field"><span class="lbl">Payment</span>
+        <div class="seg" role="group" aria-label="Payment">
+          <button type="button" data-pay="self" aria-pressed="${st.pay==="self"}">Self-pay</button>
+          <button type="button" data-pay="insured" aria-pressed="${st.pay==="insured"}">Private insurance</button>
+        </div></div>
+      ${st.pay==="insured"?`
+      <div class="field" data-f="insurer"><label for="bf-ins">Insurer</label>
+        <select id="bf-ins"><option value="">Choose your insurer…</option>${INSURERS.map(i=>`<option ${i===st.insurer?"selected":""}>${esc(i)}</option>`).join("")}</select>
+        <div class="err">Please choose your insurer.</div></div>
+      <div class="field"><label for="bf-pol">Policy / authorisation number <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+        <input id="bf-pol" value="${esc(st.policy)}"></div>`:""}`;
+    }
+    if(st.step===3){
+      body = `
+      <div class="field" data-f="name"><label for="bf-n">Full name</label><input id="bf-n" autocomplete="name" value="${esc(st.name)}"><div class="err">Please enter your name.</div></div>
+      <div class="field" data-f="phone"><label for="bf-p">Mobile number</label><input id="bf-p" type="tel" autocomplete="tel" placeholder="07…" value="${esc(st.phone)}"><div class="err">Please enter a valid UK phone number.</div></div>
+      <div class="field" data-f="email"><label for="bf-e">Email</label><input id="bf-e" type="email" autocomplete="email" value="${esc(st.email)}"><div class="err">Please enter a valid email address.</div></div>
+      <div class="field"><label for="bf-no">Briefly, what's the problem? <span style="font-weight:400;color:var(--muted)">(optional)</span></label><textarea id="bf-no" placeholder="e.g. right knee pain when running for 3 weeks">${esc(st.notes)}</textarea></div>
+      <div class="field" data-f="consent"><label class="check"><input type="checkbox" id="bf-c" ${st.consent?"checked":""}> I agree that FAB Clinic may contact me about this request and store my details in line with its privacy policy.</label><div class="err">Please tick to continue.</div></div>`;
+    }
+    box.innerHTML = `
+      <h3>Request an appointment</h3>
+      <p class="sub">Step ${st.step} of 3 · ${["","Treatment","Day, time & payment","Your details"][st.step]}</p>
+      <div class="step">${[1,2,3].map(i=>`<span class="${i<=st.step?"on":""}"></span>`).join("")}</div>
+      ${body}
+      <div class="form-nav">
+        ${st.step>1?`<button type="button" data-back>Back</button>`:`<span></span>`}
+        <button type="button" class="go" data-next>${st.step<3?"Continue":"Send request"}</button>
+      </div>`;
+    bind(); scrollDown();
+  }
+  function collect(){
+    const v = id => { const el = box.querySelector(id); return el ? el.value.trim() : null; };
+    if(st.step===1){ const t=v("#bf-t"); if(t!==null) st.treatment=t; }
+    if(st.step===2){ const i=v("#bf-ins"); if(i!==null) st.insurer=i; const p=v("#bf-pol"); if(p!==null) st.policy=p; }
+    if(st.step===3){ st.name=v("#bf-n"); st.phone=v("#bf-p"); st.email=v("#bf-e"); st.notes=v("#bf-no"); st.consent=box.querySelector("#bf-c").checked; }
+  }
+  function validate(){
+    const bad=[];
+    if(st.step===1 && !st.treatment) bad.push("treatment");
+    if(st.step===2){ if(!st.date) bad.push("date"); if(!st.time) bad.push("time"); if(st.pay==="insured" && !st.insurer) bad.push("insurer"); }
+    if(st.step===3){
+      if(st.name.length<2) bad.push("name");
+      if(!/^(\+44\s?|0)\d[\d\s]{8,12}$/.test(st.phone)) bad.push("phone");
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(st.email)) bad.push("email");
+      if(!st.consent) bad.push("consent");
+    }
+    box.querySelectorAll(".field").forEach(f=>f.classList.toggle("bad", bad.includes(f.dataset.f)));
+    if(bad.length){ const first = box.querySelector(".field.bad input, .field.bad select, .field.bad button"); first && first.focus(); }
+    return !bad.length;
+  }
+  function bind(){
+    const sel = box.querySelector("#bf-t"); if(sel) sel.onchange = ()=>{ st.treatment = sel.value; render(); };
+    const ins = box.querySelector("#bf-ins"); if(ins) ins.onchange = ()=>{ st.insurer = ins.value; };
+    box.querySelectorAll("[data-visit]").forEach(b=>b.onclick=()=>{ collect(); st.visit=b.dataset.visit; render(); });
+    box.querySelectorAll("[data-date]").forEach(b=>b.onclick=()=>{ collect(); st.date=b.dataset.date; render(); });
+    box.querySelectorAll("[data-time]").forEach(b=>b.onclick=()=>{ collect(); st.time=b.dataset.time; render(); });
+    box.querySelectorAll("[data-pay]").forEach(b=>b.onclick=()=>{ collect(); st.pay=b.dataset.pay; render(); });
+    const back = box.querySelector("[data-back]"); if(back) back.onclick=()=>{ collect(); st.step--; render(); };
+    box.querySelector("[data-next]").onclick=()=>{
+      collect(); if(!validate()) return;
+      if(st.step<3){ st.step++; render(); } else submit();
+    };
+  }
+  function submit(){
+    const t = TREATMENTS.find(x=>x.id===st.treatment);
+    const ref = "FAB-" + Math.random().toString(36).slice(2,6).toUpperCase() + String(Date.now()).slice(-2);
+    const dayLabel = fmtDay(new Date(st.date+"T12:00:00"));
+    const req = { ref, created:new Date().toISOString(), treatment:t.name, price:t.price, visit: st.visit==="home"?"Home visit":"Clinic (Hanwell)", day:dayLabel, time:st.time,
+      payment: st.pay==="insured" ? ("Insurance: "+st.insurer+(st.policy?" ("+st.policy+")":"")) : "Self-pay", name:st.name, phone:st.phone, email:st.email, notes:st.notes };
+    const all = store.get(); all.unshift(req); store.set(all); renderInbox();
+    const msg = `Appointment request ${ref}\nName: ${req.name}\nTreatment: ${req.treatment} (${req.price})\nWhere: ${req.visit}\nPreferred: ${req.day}, ${req.time}\nPayment: ${req.payment}\nPhone: ${req.phone}\nEmail: ${req.email}${req.notes?"\nNotes: "+req.notes:""}`;
+    box.remove();
+    const c = document.createElement("div"); c.className="confirm";
+    c.innerHTML = `<h3>Request received · ${esc(ref)}</h3>
+      <div style="color:var(--muted)">Our team will call or email to confirm your appointment when reception opens.</div>
+      <dl><dt>Treatment</dt><dd>${esc(req.treatment)}</dd><dt>Price</dt><dd>${esc(req.price)}</dd><dt>Where</dt><dd>${esc(req.visit)}</dd><dt>Preferred</dt><dd>${esc(req.day)}, ${esc(req.time)}</dd><dt>Payment</dt><dd>${esc(req.payment)}</dd></dl>
+      <div class="acts">
+        <a class="wa" target="_blank" rel="noopener" href="https://wa.me/${CLINIC.wa}?text=${encodeURIComponent(msg)}">Also send on WhatsApp</a>
+        <a href="mailto:${CLINIC.email}?subject=${encodeURIComponent("Appointment request "+ref)}&body=${encodeURIComponent(msg)}">Email it</a>
+      </div>`;
+    msgsEl.appendChild(c);
+    const follow = `Thank you, ${st.name.split(" ")[0]}. Your request is with the FAB Clinic team.` + (t.id==="eswt" ? " For shockwave, please avoid booking if you're pregnant or have a pacemaker, and tell the team about any blood thinners." : "") + (st.pay==="insured" ? " Please check with your insurer whether you need a GP referral before your visit." : "") + " Anything else I can help with?";
+    addMsg("bot", md(follow));
+    history.push({role:"assistant", content:`[Booking request ${ref} submitted for ${req.treatment}, ${req.day} ${req.time}] ${follow}`});
+    setChips([{label:"What happens at my first session?"},{label:"Where are you?"},{label:"Book another", action:()=>showBookingForm("")}]);
+  }
+  render();
+}
+
+/* ================= Reception inbox ================= */
+function renderInbox(){
+  const all = store.get();
+  $("#inboxCount").textContent = all.length + (all.length===1?" request waiting":" requests waiting");
+  if(!all.length){ $("#inboxBody").innerHTML = `<div class="empty">No requests yet. Open the receptionist and book a test appointment to see it land here.</div>`; return; }
+  $("#inboxBody").innerHTML = `<table><thead><tr><th>Ref</th><th>Patient</th><th>Treatment</th><th>Preferred</th><th>Payment</th><th>Received</th></tr></thead><tbody>
+    ${all.map(r=>`<tr><td><span class="pill">${esc(r.ref)}</span></td><td><b>${esc(r.name)}</b><br><a href="tel:${esc(r.phone.replace(/\s/g,""))}">${esc(r.phone)}</a><br>${esc(r.email)}</td><td>${esc(r.treatment)}<br><span style="color:var(--muted)">${esc(r.price)} · ${esc(r.visit)}</span>${r.notes?`<br><i style="color:var(--muted)">“${esc(r.notes)}”</i>`:""}</td><td>${esc(r.day)}<br>${esc(r.time)}</td><td>${esc(r.payment)}</td><td>${new Date(r.created).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</td></tr>`).join("")}
+  </tbody></table>`;
+}
+$("#clearInbox").onclick = ()=>{ store.set([]); renderInbox(); };
+
+/* ================= Wiring ================= */
+launcher.onclick = openChat;
+$("#closeChat").onclick = closeChat;
+$("#restart").onclick = welcome;
+$("#composer").onsubmit = e => { e.preventDefault(); const v=$("#q").value; $("#q").value=""; ask(v); };
+document.querySelectorAll("[data-ask]").forEach(b => b.onclick = () => ask(b.dataset.ask));
+document.querySelectorAll("[data-open-chat]").forEach(b => b.onclick = openChat);
+document.querySelectorAll("[data-open-booking]").forEach(b => b.onclick = () => { if(chat.hidden) openChat(); addMsg("user", esc("I'd like to book an appointment")); showBookingForm(""); });
+document.addEventListener("keydown", e => { if(e.key==="Escape" && !chat.hidden) closeChat(); });
+
+welcome(); renderInbox();
+</script>
+</body>
+</html>
